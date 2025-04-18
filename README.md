@@ -1,6 +1,6 @@
 # ARMCortexM4_SVC
  ARM Cortex M3/4 to handle  Supervisor Call (SVC) exception.
- Target board - STM32F407xx 
+ Target board - LPC2378 for Q1 & Q2. STM32F407xx for Q3
 
 Q1:
 Two different approach for a condition based looping is shown in ALP. For study purpose only.
