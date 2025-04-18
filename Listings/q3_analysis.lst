@@ -1,0 +1,231 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000                 AREA             RESET, CODE, READONLY
+    2 00000000                 EXPORT           __Vectors   ;making the vector 
+                                                            table __Vectors vis
+                                                            ible to linker
+    3 00000000         __Vectors
+    4 00000000 20001000        DCD              0x20001000  ;SP Address. When t
+                                                            he processor resets
+                                                            , it loads the SP f
+                                                            rom this location (
+                                                            1st location of vec
+                                                            tor)
+    5 00000004 00000001        DCD              Reset_Handler+1
+    6 00000008 00000000        DCD              0           ; NMI handler
+    7 0000000C 00000000        DCD              0           ; Hard fault handle
+                                                            r
+    8 00000010 00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000         DCD              0, 0, 0, 0, 0, 0, 0
+    9 0000002C 00000000        DCD              SVC_Handler ; SVC Handler
+   10 00000030         
+   11 00000030                 AREA             mycode,CODE,READONLY
+   12 00000000                 ENTRY
+   13 00000000                 EXPORT           Reset_Handler ;Makes the Reset_
+                                                            Handler label visib
+                                                            le to the linker.
+   14 00000000         
+   15 00000000         Reset_Handler
+   16 00000000 4811            LDR              R0, =0x20001000
+   17 00000002 4685            MOV              SP, R0      ;Initialise stack
+   18 00000004         
+   19 00000004 F04F 0001       MOV              R0, #1      ;Initialize stack p
+                                                            ointers if needed
+   20 00000008 F380 8814       MSR              CONTROL, R0 ; Switch to unprivi
+                                                            leged mode
+   21 0000000C         
+   22 0000000C         ; Load parameters into registers
+   23 0000000C F240 6043       LDR              R0, =1603   ; Parameter 1
+   24 00000010 F240 6143       LDR              R1, =1603   ; Parameter 2
+   25 00000014         
+   26 00000014         ; Call SVC with number derived from 01603
+   27 00000014         
+   28 00000014 DF03            SVC              #3          ; Assuming last 3 d
+                                                            igits of 01603. Rea
+                                                            son behind the cond
+                                                            ition in Q3.1 is 
+   29 00000016         ;because immediate value 0x0000025B (603 in decimal) is 
+                       out of range for the SVC 
+   30 00000016         ;instruction, which only permits values in the range 0x0
+                       0 to 0xFF (0 to 255 in decimal)
+   31 00000016 E7FE    STOP    B                STOP
+   32 00000018         
+   33 00000018         
+   34 00000018         SVC_Handler
+   35 00000018         ; Determine which stack was used
+   36 00000018 F01E 0F04       TST              LR, #4      ;Test bit 2 of EXC_
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+                                                            RETURN
+   37 0000001C BF0C            ITE              EQ          ;if bit is active. 
+                                                            If EQ condition is 
+                                                            true, use MSP; othe
+                                                            rwise, use PSP
+   38 0000001E F3EF 8008       MRSEQ            R0, MSP     ; MSP if EQ
+   39 00000022 F3EF 8009       MRSNE            R0, PSP     ; PSP if NE
+   40 00000026         
+   41 00000026 4605            MOV              R5, R0      ;Save SP
+   42 00000028         
+   43 00000028 6981            LDR              R1, [R0, #24] ; Get the stacked
+                                                             PC value. Load sta
+                                                            cked PC into R0. th
+                                                            e value 24 
+   44 0000002A         ;is used because it corresponds to the offset in the sta
+                       ck frame where the Program 
+   45 0000002A         ;Counter (PC) value is stored during exception handling
+   46 0000002A         
+   47 0000002A F811 2C02       LDRB             R2, [R1, #-2] ; Get the SVC num
+                                                            ber from the instru
+                                                            ction. ; Load SVC n
+                                                            umber into R1
+   48 0000002E         
+   49 0000002E         ; Extract parameters from the stack
+   50 0000002E 682B            LDR              R3, [R5, #0] ; First parameter 
+                                                            (saved R0)
+   51 00000030 686C            LDR              R4, [R5, #4] ; Second parameter
+                                                             (saved R1)
+   52 00000032         
+   53 00000032         ; Check if SVC number matches 603
+   54 00000032 2A03            CMP              R2, #3
+   55 00000034 D000            BEQ              ADDITION
+   56 00000036 E002            B                SUBTRACTION
+   57 00000038         
+   58 00000038         ADDITION
+   59 00000038 4423            ADD              R3, R3, R4  ; R3 = R3 + R4
+   60 0000003A 602B            STR              R3, [R5, #0] ; Save result to s
+                                                            tack frame's R0
+   61 0000003C E002            B                RETURN
+   62 0000003E         
+   63 0000003E         SUBTRACTION
+   64 0000003E EBA3 0304       SUB              R3, R3, R4  ; R3 = R3 - R4
+   65 00000042 602B            STR              R3, [R5, #0] ; Save result to s
+                                                            tack frame's R0
+   66 00000044         
+   67 00000044         RETURN
+   68 00000044         ; Restore registers and return
+   69 00000044 4770            BX               LR
+   70 00000046         
+   71 00000046 00 00 20001000  AREA             RESULT, DATA, READWRITE
+   72 00000000                 END
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
+erwork --depend=.\objects\q3_analysis.d -o.\objects\q3_analysis.o -I.\RTE\_Targ
+et_1 -IC:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.17.1\Drivers\CMSIS\Device\ST\ST
+M32F4xx\Include -IC:\Keil_v5\ARM\CMSIS\Include --predefine="__EVAL SETA 1" --pr
+edefine="__UVISION_VERSION SETA 526" --predefine="STM32F407xx SETA 1" --list=.\
+listings\q3_analysis.lst q3_analysis.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+RESET 00000000
+
+Symbol: RESET
+   Definitions
+      At line 1 in file q3_analysis.s
+   Uses
+      None
+Comment: RESET unused
+__Vectors 00000000
+
+Symbol: __Vectors
+   Definitions
+      At line 3 in file q3_analysis.s
+   Uses
+      At line 2 in file q3_analysis.s
+Comment: __Vectors used once
+2 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+ADDITION 00000038
+
+Symbol: ADDITION
+   Definitions
+      At line 58 in file q3_analysis.s
+   Uses
+      At line 55 in file q3_analysis.s
+Comment: ADDITION used once
+RETURN 00000044
+
+Symbol: RETURN
+   Definitions
+      At line 67 in file q3_analysis.s
+   Uses
+      At line 61 in file q3_analysis.s
+Comment: RETURN used once
+Reset_Handler 00000000
+
+Symbol: Reset_Handler
+   Definitions
+      At line 15 in file q3_analysis.s
+   Uses
+      At line 5 in file q3_analysis.s
+      At line 13 in file q3_analysis.s
+
+STOP 00000016
+
+Symbol: STOP
+   Definitions
+      At line 31 in file q3_analysis.s
+   Uses
+      At line 31 in file q3_analysis.s
+Comment: STOP used once
+SUBTRACTION 0000003E
+
+Symbol: SUBTRACTION
+   Definitions
+      At line 63 in file q3_analysis.s
+   Uses
+      At line 56 in file q3_analysis.s
+Comment: SUBTRACTION used once
+SVC_Handler 00000018
+
+Symbol: SVC_Handler
+   Definitions
+      At line 34 in file q3_analysis.s
+   Uses
+      At line 9 in file q3_analysis.s
+Comment: SVC_Handler used once
+mycode 00000000
+
+Symbol: mycode
+   Definitions
+      At line 11 in file q3_analysis.s
+   Uses
+      None
+Comment: mycode unused
+7 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+RESULT 00000000
+
+Symbol: RESULT
+   Definitions
+      At line 71 in file q3_analysis.s
+   Uses
+      None
+Comment: RESULT unused
+1 symbol
+346 symbols in table

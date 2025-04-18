@@ -1,0 +1,6 @@
+--cpu ARM7TDMI
+".\objects\q1_code02.o"
+--strict --scatter ".\Objects\Assignment_01.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list ".\Listings\Assignment_01.map" -o .\Objects\Assignment_01.axf
