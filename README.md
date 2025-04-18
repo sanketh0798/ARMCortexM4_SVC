@@ -1,6 +1,9 @@
 # ARMCortexM4_SVC
  ARM Cortex M3/4 to handle  Supervisor Call (SVC) exception
 
+Q1:
+Two different approach for a condition based looping is shown in ALP. For study purpose only.
+
 Q2:
 An assembly language program for ARM7TDMI to count the number of 0's and 1's in the last 5 digits of a fixed number (number must be given in decimal number format). Store the number of 0's in register R0 and the number of 1's in register R1. Verify your result by performing manual calculation. (Consider Number either 32 bit or 16 bit)  
 
